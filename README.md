@@ -70,7 +70,7 @@ and sanitised raw HTML.
 
 - **Next.js 15** (App Router, Server Actions, Route Handlers) + **React 19** + **TypeScript** (strict)
 - **Tailwind CSS 3.4** with a CSS-variable design token layer (dark + light)
-- **SQLite** (`better-sqlite3`, WAL) — no ORM, typed query layer in `src/lib/db/queries.ts`
+- **SQLite** via Node's built-in `node:sqlite` (WAL) — no compiled addon, no ORM; typed query layer in `src/lib/db/queries.ts`. Requires Node ≥ 22.5; on Node 22.x start the server with `NODE_OPTIONS=--experimental-sqlite`.
 - **unified / remark / rehype**, **Shiki**, **KaTeX**, **Mermaid**
 - **scrypt** password hashing + opaque DB-backed sessions (no auth dependency)
 - Zero client-side state libraries; no analytics, no third-party scripts
@@ -157,12 +157,34 @@ npm run db:setup        # first deploy only
 npm start               # PORT=3000 by default
 ```
 
+On Node 22.x, prefix the server with the SQLite flag:
+
+```bash
+NODE_OPTIONS=--experimental-sqlite npm start
+```
+
 Put `storage/` on a persistent volume and back it up as a single unit (the
 database without its uploads is a broken site):
 
 ```bash
 tar -czf jacky-backup-$(date +%F).tgz storage/
 ```
+
+**Hosts that cannot run the compiler**
+
+Some sandboxes have too little memory for `next build`, or mount the project
+read-only. Build locally, ship the output, and start through the wrapper:
+
+```bash
+NEXT_DIST_DIR=prebuilt npm run build     # 16 MB, no webpack cache
+rm -rf prebuilt/cache                    # caches are not needed at runtime
+sh scripts/serve.sh                      # copies db/uploads to a writable dir
+```
+
+`next.config.ts` auto-detects `prebuilt/BUILD_ID` when `.next` is absent, and
+`scripts/serve.sh` copies the seeded database into `/tmp/jacky-runtime` so
+SQLite can write on a read-only mount. `GET /api/health` reports which of those
+steps (read, write, scrypt, uploads) works in the current environment.
 
 **Docker**
 
