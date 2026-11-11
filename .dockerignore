@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.qa
+storage
+content/seed/**/*.tmp
+*.log
+.env

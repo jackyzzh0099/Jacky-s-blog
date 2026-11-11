@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      DATABASE_PATH: /app/storage/jacky.db
+      STORAGE_DIR: /app/storage/uploads
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-jacky@localhost}
+      ADMIN_NAME: ${ADMIN_NAME:-Jacky}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-please}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-8}
+    volumes:
+      - ./storage:/app/storage
+    restart: unless-stopped
